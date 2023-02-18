@@ -8,7 +8,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from environs import Env
 
 import markups as nav
-from db_queries import check_executors, get_orders, push_order, get_rate
+from db_queries import check_executors, get_orders, push_order, get_rate, get_inwork_orders, end_order
 
 env = Env()
 env.read_env()
@@ -69,27 +69,48 @@ async def worker_routine(message: types.Message):
         print('заказ закреплён за юзером', approved_order, sep='\n')
 
     elif message.text == '👈 Вернуться':
-        await bot.send_message(message.from_user.id, 'Заказ не был взят, вы вернулись в главное меню ❗',
+        await bot.send_message(message.from_user.id, 'Вы вернулись в главное меню без сохранения изменений ❗',
                                reply_markup=nav.worker_menu)
-        approved_order.clear()
+
         print('принятие заказа отменено', approved_order, sep='\n')
     elif message.text == '❓ ЧаВо':
         await bot.send_message(message.from_user.id, 'Какие вопросы у вас возникли по пользованию ботом?',
                                reply_markup=nav.qna_menu)
+    elif message.text == '🏆 Сдать заказ':
+        user_id = message.from_user.id
+        inwork_orders = get_inwork_orders(db_filename, user_id)
+        if inwork_orders:
+            await bot.send_message(message.from_user.id, f'На данный момент у вас в работе:\n')
+            for order in inwork_orders:
+                await bot.send_message(message.from_user.id, f'<b>заказ под номером:</b> {order[0]}\n'
+                                                            f'<b>Описание заказа:</b> {order[1]}',
+                                    parse_mode='HTML',
+                                    reply_markup=nav.work_end_menu)
+            approved_order.update({'end_order_id': inwork_orders[0][0]})
+        else:
+            await bot.send_message(message.from_user.id, "У вас нет заказов  в работе",
+                                   parse_mode='HTML',
+                                   reply_markup=nav.worker_menu)
+
+    elif message.text == '🏁 Завершить заказ':
+        end_order(db_filename, approved_order)
+        await bot.send_message(message.from_user.id, 'Заказ завершён, если что-то будет не так, мы где ты живёшь ❗',
+                               reply_markup=nav.worker_menu)
+        approved_order.clear()
 
 
 @dp.callback_query_handler(text='salary_btn')
 async def comment_to_client(message: types.Message):
     rate = get_rate(db_filename)
     await bot.send_message(message.from_user.id, "💸 На данный момент стандартная ставка за 1им выполненный заказ составляет:\n\n"
-                                                 f"<b>{rate}р.</b>")
+                                                 f"<b>{rate}р.</b>",
+                           parse_mode='HTML')
 
 
 @dp.callback_query_handler(text='how_to_use')
 async def comment_to_client(message: types.Message):
     await bot.send_message(message.from_user.id, '- Нажав на кнопку <b>"📑 Выбрать заказ"</b> - для вас подбирается заявка\n'
                                                  '- Нажав на кнопку <b>"📖 В работе"</b> вы можете посмотреть список своих текущих заказов')
-
 
 
 # -- Take-Order InlineButton
@@ -117,13 +138,11 @@ async def worker_routine(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(text='no_take_order')
 async def no_take_order(callback: types.CallbackQuery):
     await callback.message.delete()
-    print(f'сейчас список такой {approved_order}')
-    approved_order.clear()
-    print(f'отказ от заказа')
+    print(f'отказ от заказа {approved_order}')
 
 
 # -- comment to client InlineButton
-@dp.callback_query_handler(text='comment_to_client')
+@dp.callback_query_handler(text='comment_to')
 async def comment_to_client(message: types.Message):
     await bot.send_message(message.from_user.id, "💬 Ваше следующее сообщение будет отправлено клиенту")
     await Form.comment_to_client.set()
@@ -139,7 +158,7 @@ async def worker_comment(message: types.Message, state: FSMContext):
                                           '❓ <b>Вопрос звучит так:</b>\n'
                                           f'<i>"{message.text}"</i>\n\n'
                                           'Ответить вы можете через соответствующий функционал ниже',
-                               parse_mode='HTML', reply_markup=nav.worker_begining_menu)
+                               parse_mode='HTML', reply_markup=nav.answer_menu)
         await bot.send_message(message.from_user.id, 'Сообщение было отправлено клиенту...')
     await state.finish()
 

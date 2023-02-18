@@ -64,7 +64,7 @@ def get_orders(db_filename):
     return [list(order) for order in result]
 
 
-# -- Отправка данных в базу данных
+# -- Отправка данных в БД
 def push_order(db_filename, approved_order):
     with sq.connect(db_filename) as con:
         cur = con.cursor()
@@ -80,6 +80,7 @@ def push_order(db_filename, approved_order):
         cur.close()
 
 
+# -- Получение заказов в работе
 def get_inwork_orders(db_filename, user_id):
     with sq.connect(db_filename) as con:
         cur = con.cursor()
@@ -91,6 +92,20 @@ def get_inwork_orders(db_filename, user_id):
     return [list(order) for order in result]
 
 
+# -- Отправка данных о завершении работы
+def end_order(db_filename, approved_order):
+    with sq.connect(db_filename) as con:
+        cur = con.cursor()
+        cur.execute('UPDATE controller_order '
+                    'SET is_complete=? ,complete_date=? '
+                    'WHERE id=?',
+                    (True,
+                     str(datetime.date.today()),
+                     approved_order['end_order_id'])
+                    )
+        cur.close()
+
+# -- Получение ставки
 def get_rate(db_filename):
     with sq.connect(db_filename) as con:
         cur = con.cursor()
@@ -107,6 +122,5 @@ if __name__ == '__main__':
     login = env('LOGIN')
     password = env('PASSWORD')
     db_filename = env('DB_FILENAME')
-    user_id = 406682076     # 473542316 406682076
-    print(get_rate(db_filename))
+
 
