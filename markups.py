@@ -6,25 +6,27 @@ worker_btn = KeyboardButton('💻Подрядчик')
 main_menu = ReplyKeyboardMarkup(resize_keyboard=True).add(client_btn, worker_btn)
 
 # -- QnA menu --
-salary_btn = KeyboardButton('💰Об оплате')
-how_to_use = KeyboardButton('💡Как пользоваться')
-qna_menu = ReplyKeyboardMarkup(resize_keyboard=True).add(salary_btn, how_to_use)
+salary_btn = InlineKeyboardButton('💰 Об оплате', callback_data='salary_btn') # вывести ставку
+how_to_use = InlineKeyboardButton('💡 Как пользоваться', callback_data='how_to_use')
+
+qna_menu = InlineKeyboardMarkup().add(salary_btn, how_to_use)
 
 # -- Worker menu -- 📑
-order_obtain_btn = KeyboardButton('📑Выбрать заказ')
-in_work_orders_btn = KeyboardButton('📖В работе')
-comments_to_client_btn = KeyboardButton('💬Написать Клиенту')
-qna_btn = KeyboardButton('❓ЧаВо')
-worker_menu = ReplyKeyboardMarkup(resize_keyboard=True).add(order_obtain_btn, in_work_orders_btn,comments_to_client_btn, qna_btn)
+order_obtain_btn = KeyboardButton('📑 Выбрать заказ')
+end_order_btn = KeyboardButton('🏆 Сдать заказ')
+qna_btn = KeyboardButton('❓ ЧаВо')
+worker_menu = ReplyKeyboardMarkup(resize_keyboard=True).row(order_obtain_btn, end_order_btn).add(qna_btn)
+
+# -- Start work menu
+start_work_btn = KeyboardButton('👌 Начать работу')
+back_btn = KeyboardButton('👈 Вернуться')
+worker_begining_menu = ReplyKeyboardMarkup(resize_keyboard=True).row(start_work_btn, back_btn)
 
 # -- Inline menu --
-reserve_order_btn = InlineKeyboardButton('✅Взять заявку')
-delete_order_btn = InlineKeyboardButton('🚫Отказаться')
-choice_menu = InlineKeyboardMarkup().add(reserve_order_btn, delete_order_btn)
-
-# -- Block --
-subsciption_btn = KeyboardButton('Купить подписку на сервис')
-block_menu = ReplyKeyboardMarkup(resize_keyboard=True).add(subsciption_btn)
+reserve_order_btn = InlineKeyboardButton('✅ Взять заявку', callback_data='take_order')
+delete_order_btn = InlineKeyboardButton('🚫 Отказаться', callback_data='no_take_order')
+comments_to_client_btn = InlineKeyboardButton('💬 Коммент Клиенту', callback_data='comment_to_client')
+choice_menu = InlineKeyboardMarkup().add(reserve_order_btn, delete_order_btn).row(comments_to_client_btn)
 
 # -- Redirect --
 payment_btn = InlineKeyboardButton('Купить подписку на сервис', url='dvmn.org')
