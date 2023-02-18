@@ -164,8 +164,8 @@ async def worker_comment(message: types.Message, state: FSMContext):
 
 
 if __name__ == '__main__':
-    login = env('LOGIN')
-    password = env('PASSWORD')
+    # login = env('LOGIN')
+    # password = env('PASSWORD')
     db_filename = env('DB_FILENAME')
     client_bot_token = env('CLIENT_TELEGRAM_TOKEN')
 
